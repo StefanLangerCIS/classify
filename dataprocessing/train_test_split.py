@@ -18,15 +18,15 @@ def main():
     parser = argparse.ArgumentParser(description='Split in train and test')
 
     parser.add_argument('--input',
-                        default=os.path.join(DATA_DIR, "news/classification_news.jsonl"),
+                        default=os.path.join(DATA_DIR, "sentiment/full_data/classification_sentiment.jsonl"),
                         help='All data, the data_records to be split. One json record per line')
 
     parser.add_argument('--output_folder',
-                        default=os.path.join(DATA_DIR, "news"),
+                        default=os.path.join(DATA_DIR, "sentiment/classification"),
                         help='Folder where the split data set will be put')
 
     parser.add_argument('--label',
-                        default="category",
+                        default="sentiment",
                         help='The label for filtering by count')
 
     parser.add_argument('--min_count',
@@ -34,7 +34,7 @@ def main():
                         help='A label which occurs less in the data is not used')
 
     parser.add_argument('--max_count',
-                        default=2000,
+                        default=2000000,
                         help='Per label - more occurrences of records with a label are ignored')
 
     args = parser.parse_args()
