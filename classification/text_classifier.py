@@ -1,6 +1,6 @@
 import abc
 from abc import ABC
-from typing import List
+from typing import List, Dict, Any
 
 
 class ClassifierResult:
@@ -28,27 +28,40 @@ class TextClassifier(ABC):
     """
     Abstract base class for ADS classifier + the definition of a classifier result
     """
+
     @abc.abstractmethod
-    def name(self):
+    def name(self) -> str:
+        """
+        Return the classifier name
+        :return: Name of the classifier
+        """
         return ""
 
     @abc.abstractmethod
-    def train(self, training_data: str, text_label: str, class_label: str) -> None:
+    def info(self) -> Dict[str, Any]:
+        """
+        Information about the classifier (e.g. hyperparameters)
+        :return: Additional info about the classifier
+        """
+        return {"AbstractClassifier": True}
+
+    @abc.abstractmethod
+    def train(self, training_data: str, text_label: List[str], class_label: str) -> None:
         """
         Train using the training data
         :param training_data: file with json data, one json record per line
-        :param text_label: the json field which contains the text
+        :param text_label: list of json fields which contain the text
         :param class_label:  the json field which contains the label
         :return: Nothing
         """
         return
 
     @abc.abstractmethod
-    def classify(self, data, text_label: str) -> List[ClassifierResult]:
+    def classify(self, data, text_label: List[str]) -> List[ClassifierResult]:
         """
         Classify a given text
         :param data: dictionary (parsed json) - the record to classify
-        :param text_label: the dictionary/json field which ocntains the text
+        :param text_label: list of json fields which contain the text
         :return: List of predicted classes (for most classifier, just one class)
         """
         """

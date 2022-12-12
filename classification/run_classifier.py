@@ -88,21 +88,21 @@ def main():
     classifier_types = SklearnClassifier.supported_classifiers
 
     parser.add_argument('--training',
-                    default=os.path.join(DATA_DIR, "letters/classifier/classifier_data_train.json"),
+                    default=os.path.join(DATA_DIR, "letters/classification/classifier_data_train.json"),
                     help='The training data for the classifier. If "None", the existing model is loaded (if it exists)')
     
     parser.add_argument('--input',
-                    default=os.path.join(DATA_DIR, "letters/classifier/classifier_data_eval.json"),
+                    default=os.path.join(DATA_DIR, "letters/classification/classifier_data_eval.json"),
                     help='The text data to use for evaluation (one json per line)')
 
     parser.add_argument('--output',
-                        default=os.path.join(DATA_DIR, "results/classification-results"),
+                        default=os.path.join(DATA_DIR, "letters/classification/results"),
                         help='Folder where to write the classifier evaluation results')
 
     parser.add_argument('--classifier',
-                    choices=classifier_types + ["all"],
-                    default="MLPClassifier",
-                    help="The classifier to use. If 'all' iterate through all available classifiers" )
+                        choices=classifier_types + ["all"],
+                        default="MLPClassifier",
+                        help="The classifier to use. If 'all' iterate through all available classifiers")
 
     parser.add_argument('--dense',
                         action='store_true',
@@ -114,11 +114,16 @@ def main():
 
     parser.add_argument('--text_label',
                         default="text",
-                        help='Label/field in the json data contains the text to classify')
+                        help='Label/field in the json data which contains the text to classify.'
+                             'Can also be multiple labels separated by comma (,)')
 
     parser.add_argument('--label',
                         default="author",
                         help='Label/field to use for training and classification')
+
+    parser.add_argument('--file_label',
+                        default="",
+                        help='Label attached to output file name (meta data only)')
 
     parser.add_argument('--verbose',
                         action='store_true',
@@ -142,14 +147,16 @@ def main():
                 n_training_lines += 1
 
     # Iterate over the classifiers
+    text_labels = args.text_label.split(",")
     for classifier_type in classifiers:
         classifier = SklearnClassifier(classifier_type, dense=args.dense, lsa=args.lsa)
         print("INFO: Evaluating classification of classifier {0}".format(classifier.name()))
         training_time = 0
         if args.training is not None:
+            print("INFO: Reading training data from {0}".format(args.training))
             training_time = time.time()
             print("INFO: Training classifier")
-            classifier.train(args.training, args.text_label, args.label)
+            classifier.train(args.training, text_labels, args.label)
             training_time = int(time.time() - training_time)
             print("INFO: Training completed in {} seconds".format(training_time))
 
@@ -166,7 +173,7 @@ def main():
         with open(args.input, encoding="utf-8") as infile:
             for line in infile:
                 json_data = json.loads(line)
-                res = classifier.classify(json_data, args.text_label)
+                res = classifier.classify(json_data, text_labels)
                 class_name = "none"
                 if len(res) > 0:
                     class_name = res[0].class_name
@@ -177,11 +184,17 @@ def main():
         print("INFO: Classification completed for classifier {0} in {1} s".format(classifier.name(), classification_time))
         print("INFO: Writing results of classifier {0}".format(classifier.name()))
 
-        outfile_name = os.path.join(args.output, "results_{0}.txt".format(classifier.name()))
+        outfile_identifier = "results_{0}_{1}".format(classifier.name(), args.label)
+        if args.file_label:
+            outfile_identifier += "_{0}".format(args.file_label)
+        outfile_name = os.path.join(args.output, "{0}.txt".format(outfile_identifier))
         with open(outfile_name, "w", encoding="utf-8") as outfile:
             outfile.write("#Info:\n")
             outfile.write("Classifier: {0}\n".format(classifier.name()))
+            outfile.write("Parameters: {0}\n".format(json.dumps(classifier.info())))
             outfile.write("Label: {0}\n".format(args.label))
+            outfile.write("Text label: {0}\n".format(args.text_label))
+            outfile.write("Dense|LSA: {0}|{1}\n".format(args.dense, args.lsa))
             outfile.write("\n#Counts:\n")
             outfile.write("Number of training data_records: {0}\n".format(n_training_lines))
             outfile.write("Number of classified data_records: {0}\n".format(len(expected_classes)))
@@ -192,7 +205,7 @@ def main():
             outfile.write("Seconds used for classification: {0}\n".format(classification_time))
 
             warnings.filterwarnings("ignore", category = sklearn.exceptions.UndefinedMetricWarning)
-            outfile.write("\n#Classification report:\n{0}\n".format(sklearn.metrics.classification_report(expected_classes, predicted_classes)))
+            outfile.write("\n#Classification report:\n{0}\n".format(sklearn.metrics.classification_report(expected_classes, predicted_classes, digits=3)))
 
             # Print the entire confusion matrix, not truncated
             np.set_printoptions(threshold=np.inf, linewidth=200)
@@ -200,9 +213,10 @@ def main():
                 sklearn.metrics.confusion_matrix(expected_classes, predicted_classes)))
 
         # Also store confusion matrix as image
-        imagefile_name = os.path.join(args.output, "results_{0}.jpg".format(classifier.name()))
+        imagefile_name = os.path.join(args.output, "{0}.jpg".format(outfile_identifier))
         plot_and_store_confusion_matrix(expected_classes, predicted_classes, imagefile_name)
         print("INFO: Processing completed for classifier {0}".format(classifier.name()))
+
 
 if __name__ == "__main__":
     main()

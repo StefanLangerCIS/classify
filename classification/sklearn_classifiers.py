@@ -4,7 +4,7 @@
 """
 import random
 import re
-from typing import List, Dict
+from typing import List, Dict, Any
 
 import numpy
 import pandas as pd
@@ -74,9 +74,9 @@ class SklearnClassifier(TextClassifier):
         elif classifier_type == "MultinomialNB":
             self.sklearn_classifier = MultinomialNB(alpha=0.01)
         elif classifier_type == "LogisticRegression":
-            self.sklearn_classifier = LogisticRegression(C=1e5, solver='lbfgs', multi_class='multinomial')
+            self.sklearn_classifier = LogisticRegression()
         elif classifier_type == "RandomForestClassifier":
-            self.sklearn_classifier = RandomForestClassifier(n_estimators=10)
+            self.sklearn_classifier = RandomForestClassifier(n_estimators=10, n_jobs=-1)
         elif classifier_type == "DecisionTreeClassifier":
             self.sklearn_classifier = DecisionTreeClassifier(min_samples_split=10, max_features='sqrt')
         elif classifier_type == "Perceptron":
@@ -102,14 +102,17 @@ class SklearnClassifier(TextClassifier):
     def name(self) -> str:
         return self.classifier_name
 
-    def classify(self, data: dict, text_label: str) -> List[ClassifierResult]:
+    def info(self) -> Dict[str, Any]:
+        return self.sklearn_classifier.get_params()
+
+    def classify(self, data: dict, text_label: List[str]) -> List[ClassifierResult]:
         """
         Classify a record consisting of text and sensor codes
         :return The detected class as ClassifierResult
         """
         # print(sensor_codes)
         data_point = {}
-        data_point["text"] = data[text_label]
+        data_point["text"] = " ".join([data[x] for x in text_label])
         data_table = create_data_table([data_point])
         if self.dense:
             matrix = self._create_dense_matrix(data_table)
@@ -122,7 +125,7 @@ class SklearnClassifier(TextClassifier):
         result = ClassifierResult(predicted_class, -1, "")
         return [result]
 
-    def train(self, training_data: str, text_label: str, class_label: str) -> None:
+    def train(self, training_data: str, text_label: List[str], class_label: str) -> None:
         """
         Train the classifier
         :param training_data: File name. Training data is one json per line
@@ -242,7 +245,7 @@ class SklearnClassifier(TextClassifier):
 # ********************************
 # Creation  of data to classify
 # ********************************
-def get_data_records_from_file(training_file: str, text_label: str, class_label: str, mx: int = 0):
+def get_data_records_from_file(training_file: str, text_label: List[str], class_label: str, mx: int = 0):
     """
     Retrieve the data records from file (for training)
     """
@@ -251,7 +254,7 @@ def get_data_records_from_file(training_file: str, text_label: str, class_label:
         for line in training_fp:
             record = json.loads(line)
             data_record = {}
-            data_record["text"] = record[text_label]
+            data_record["text"] = " ".join([record[x] for x in text_label])
             data_record["label"] = record[class_label]
             data_records.append(data_record)
 
