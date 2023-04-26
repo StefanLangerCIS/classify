@@ -35,6 +35,7 @@ def main():
     label_merges = {
         "PARENTS": "PARENTING",
         "ARTS": "CULTURE & ARTS",
+        "ARTS & CULTURE": "CULTURE & ARTS",
         "GREEN": "ENVIRONMENT",
         "FOOD & DRINK": "TASTE",
         "THE WORLDPOST": "WORLD",
