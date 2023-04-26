@@ -65,7 +65,7 @@ GET letter_index/_search?q=text:cottage
 GET letter_index/_search
 {
     "query" : {
-        "match": { "text": "chocolate" }
+        "match": { "text": "cottage" }
     },
     "highlight" : {
         "fields" : {
