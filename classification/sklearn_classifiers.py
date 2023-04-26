@@ -107,10 +107,13 @@ class SklearnClassifier(TextClassifier):
 
     def classify(self, data: dict, text_label: List[str]) -> List[ClassifierResult]:
         """
-        Classify a record consisting of text and sensor codes
-        :return The detected class as ClassifierResult
+        Classify a record. The record can have multiple fields with text
+
+        :param data: The data dictionary
+        :param text_label: The key(s) in the data which point to the text to classify
+        :return: A list with one classifier result
         """
-        # print(sensor_codes)
+
         data_point = {}
         data_point["text"] = " ".join([data[x] for x in text_label])
         data_table = create_data_table([data_point])
@@ -133,13 +136,9 @@ class SklearnClassifier(TextClassifier):
         :param class_label:  Json field which contains the label for the classes to train
         :return: Nothing
         """
-        """
-        Train the algorithm with the data from the knowledge graph
-        """
         self.training_data = training_data
         data_points = get_data_records_from_file(training_data, text_label, class_label)
         data_train = create_data_table(data_points)
-        # data_train = data_train.truncate(after=200)
         if self.dense:
             matrix_train = self._create_dense_matrix(data_train)
         else:
