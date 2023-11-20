@@ -4,7 +4,7 @@ Evaluate any of the classifier, print a confusion matrix and create further eval
 import argparse
 import json
 import os
-from sklearn_clustering import SklearnClustering
+from classification.sklearn_clustering import SklearnClustering
 import time
 
 # Data directory. Follow structure in _default_data_dir or

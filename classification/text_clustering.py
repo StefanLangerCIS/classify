@@ -31,7 +31,7 @@ class Cluster:
         self.data_points.append(data_point)
 
     def __repr__(self):
-        return "{0} object. cluster_id: {1}, cluster_description: {2}, number_of_datapoints: {3}".format(self.__class__, self.cluster_id, self.cluster_decription, len(self.data_points))
+        return f"{self.__class__} object. cluster_id: {self.cluster_id}, cluster_description: {self.cluster_decription}, number_of_datapoints: {len(self.data_points)}"
 
 
 class TextClustering(ABC):

@@ -40,7 +40,7 @@ class SklearnGridSearch:
         self.verbose = verbose
 
         if classifier_type not in self.grid:
-            raise Exception("Unsupported classifier type {0}. Use one of {1}".format(classifier_type, self.grid.keys()))
+            raise Exception(f"Unsupported classifier type {classifier_type}. Use one of {self.grid.keys()}")
 
         if classifier_type == "RandomForestClassifier":
             self.sklearn_classifier = RandomForestClassifier()
@@ -66,7 +66,7 @@ class SklearnGridSearch:
         """
 
         data_train = create_data_table_from_training_file(training_data, text_label, class_label, 10000)
-        print("INFO: grid evaluation with {0} data points".format(len(data_train)))
+        print(f"INFO: grid evaluation with {len(data_train)} data points")
         data_train = data_train.fillna(0)
 
         matrix_train_counts = self.count_vectorizer.fit_transform(data_train.text)

@@ -18,10 +18,7 @@ class ClassifierResult:
         self.meta_information = meta_information
 
     def __repr__(self):
-        return "{0} object. class_name: {1}, class_description: {2}, meta_information: {3}".format(self.__class__,
-                                                                                                   self.class_name,
-                                                                                                   self.class_score,
-                                                                                                   self.meta_information)
+        return f"{self.__class__} object. class_name: {self.class_name}, class_description: {self.class_score}, meta_information: {self.meta_information}"
 
 
 class TextClassifier(ABC):

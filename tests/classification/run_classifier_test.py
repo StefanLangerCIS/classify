@@ -1,0 +1,39 @@
+import unittest
+from typing import List, Tuple
+from classification.run_classifier import run_classifier  # replace "your_module" with the actual module name
+
+import os
+
+
+def get_test_files() -> Tuple[str, str]:
+    # get the current file's directory
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    # build the file path in the test_data subfolder
+    train_data = os.path.join(current_dir, 'test_data', "classifier_data_train.jsonl")
+    test_data = os.path.join(current_dir, 'test_data', "classifier_data_eval.jsonl")
+    test_dir = os.path.join(current_dir, 'test_data')
+    return train_data, test_data, test_dir
+
+
+class TestRunClassifier(unittest.TestCase):
+
+    def test_run_classifier(self):
+        classifier_type = 'LogisticRegression'
+        training_data, test_data, test_dir = get_test_files()
+        class_label = 'lang'  # replace with your actual value
+        text_labels = ['text']  # replace with your actual value
+        dense = False
+        lsa = False
+        output = test_dir  # replace with your actual value
+        max_train = 0
+        verbose = True
+
+        # assuming your function doesn't return anything
+        report = run_classifier(classifier_type, training_data, test_data, class_label, text_labels, dense, lsa, output, max_train, verbose)
+        self.assertTrue(isinstance(report, dict))
+        self.assertTrue("accuracy" in report)
+
+
+if __name__ == '__main__':
+    unittest.main()
+

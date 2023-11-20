@@ -71,10 +71,11 @@ class TextEncoder:
                 self.cache_new.append((md5, self.model, embedding))
                 batch_size = 200
                 if len(self.cache) % batch_size == 0:
-                    print("INFO: Embedding calculation - next batch of {} embeddings of {} completed".format(batch_size, len(texts)))
+                    print(
+                        f"INFO: Embedding calculation - next batch of {batch_size} embeddings of {len(texts)} completed")
                     self._safe_cache()
             embeddings.append([embedding])
             if len(embeddings) % 1000 == 0:
-                print("INFO: Embedding retrieval/calculation - {} of {} completed".format(len(embeddings), len(texts)))
+                print(f"INFO: Embedding retrieval/calculation - {len(embeddings)} of {len(texts)} completed")
                 self._safe_cache()
         return numpy.concatenate(embeddings)

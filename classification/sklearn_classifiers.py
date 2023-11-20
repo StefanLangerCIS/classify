@@ -11,8 +11,8 @@ import pandas as pd
 from sentence_transformers import SentenceTransformer
 from sklearn.decomposition import TruncatedSVD
 
-from text_encoder import TextEncoder
-from text_classifier import TextClassifier, ClassifierResult
+from classification.text_encoder import TextEncoder
+from classification.text_classifier import TextClassifier, ClassifierResult
 
 import json
 import os
@@ -40,7 +40,8 @@ class SklearnClassifier(TextClassifier):
     supported_classifiers = ["DecisionTreeClassifier", "RandomForestClassifier", "LogisticRegression", "MLPClassifier",
                              "GaussianNB", "MultinomialNB", "KNeighborsClassifier", "LinearSVC", "Perceptron"]
 
-    def __init__(self, classifier_type: str, dense: bool = False, lsa: bool = False, model_folder_path: str = None, verbose=False):
+    def __init__(self, classifier_type: str, dense: bool = False, lsa: bool = False, model_folder_path: str = None,
+                 verbose=False):
         """
         Initialize the classifier
         :param classifier_type: The name of the classifiers
@@ -83,7 +84,7 @@ class SklearnClassifier(TextClassifier):
             self.sklearn_classifier = Perceptron()
         else:
             raise Exception(
-                "Unsupported classifier type {0}. Use one of {1}".format(classifier_type, self.supported_classifiers))
+                f"Unsupported classifier type {classifier_type}. Use one of {self.supported_classifiers}")
 
         self.classifier_type = classifier_type
         self.dense = dense
@@ -128,17 +129,20 @@ class SklearnClassifier(TextClassifier):
         result = ClassifierResult(predicted_class, -1, "")
         return [result]
 
-    def train(self, training_data: str, text_label: List[str], class_label: str) -> None:
+    def train(self, training_data: str, text_label: List[str], class_label: str, max_data: int = 0) -> None:
         """
         Train the classifier
         :param training_data: File name. Training data is one json per line
         :param text_label: Json field which contains the text
         :param class_label:  Json field which contains the label for the classes to train
+        :param max_data: maximum number of data to use for training 0 for all data
         :return: Nothing
         """
         self.training_data = training_data
         data_points = get_data_records_from_file(training_data, text_label, class_label)
         data_train = create_data_table(data_points)
+        if max_data > 0:
+            data_train = data_train[0:max_data]
         if self.dense:
             matrix_train = self._create_dense_matrix(data_train)
         else:
@@ -156,7 +160,7 @@ class SklearnClassifier(TextClassifier):
         pass
         # if self.classifier_type == "DecisionTreeClassifier":
         #    self.print_decision_tree()
-        #else:
+        # else:
         #    pass
 
     def _print_decision_tree(self):
@@ -179,7 +183,7 @@ class SklearnClassifier(TextClassifier):
                     word = vocabulary[word_id]
                 else:
                     word = "UNK"
-                rule = rule.replace("feature_{}".format(word_id_str), word)
+                rule = rule.replace(f"feature_{word_id_str}", word)
                 lines.append(rule)
             else:
                 lines.append(rule)

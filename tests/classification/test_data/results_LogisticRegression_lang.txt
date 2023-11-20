@@ -1,0 +1,35 @@
+#Info:
+Classifier: LogisticRegression
+Parameters: {"C": 1.0, "class_weight": null, "dual": false, "fit_intercept": true, "intercept_scaling": 1, "l1_ratio": null, "max_iter": 100, "multi_class": "auto", "n_jobs": null, "penalty": "l2", "random_state": null, "solver": "lbfgs", "tol": 0.0001, "verbose": 0, "warm_start": false}
+Label: lang
+Text labels: ['text']
+Dense|LSA: False|False
+
+#Counts:
+Number of training data_records: 183
+Number of classified data_records: 121
+Number of unique classes in data_records: 4
+Number of unique classes found: 3
+
+#Performance:
+Seconds used for training: 0
+Seconds used for classification: 0
+
+#Classification report:
+              precision    recall  f1-score   support
+
+          da      1.000     1.000     1.000         7
+          de      0.972     1.000     0.986        69
+          en      1.000     1.000     1.000        43
+          fr      0.000     0.000     0.000         2
+
+    accuracy                          0.983       121
+   macro avg      0.743     0.750     0.746       121
+weighted avg      0.967     0.983     0.975       121
+
+
+#Confusion matrix:
+[[ 7  0  0  0]
+ [ 0 69  0  0]
+ [ 0  0 43  0]
+ [ 0  2  0  0]]
