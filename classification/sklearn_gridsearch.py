@@ -10,7 +10,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from sklearn.model_selection import GridSearchCV
 from sklearn.neural_network import MLPClassifier
-from sklearn_classifiers import create_data_table_from_training_file
+from classification.sklearn_classifiers import get_data_records_from_file
 
 
 class SklearnGridSearch:
@@ -34,7 +34,6 @@ class SklearnGridSearch:
         """
         Initialize the classifier
         :param classifier_type: The name of the classifiers
-        :param grid: Parameter settings to check
         :param verbose: verbosity true or false
         """
         self.verbose = verbose
@@ -71,7 +70,7 @@ class SklearnGridSearch:
         Train the algorithm with the data from the knowledge graph
         """
 
-        data_train = create_data_table_from_training_file(
+        data_train = get_data_records_from_file(
             training_data, text_label, class_label, 10000
         )
         print(f"INFO: grid evaluation with {len(data_train)} data points")
