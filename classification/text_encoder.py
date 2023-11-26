@@ -1,16 +1,15 @@
 """ Embeddings encoder for text sequences
     Uses SentenceTransformers, but adds a cache
 """
+import hashlib
+import json
+import os
 import re
-from typing import List, Dict
+from typing import Dict, List
 
 import numpy
 import pandas as pd
 from sentence_transformers import SentenceTransformer
-
-import json
-import os
-import hashlib
 
 
 class TextEncoder:
@@ -37,7 +36,7 @@ class TextEncoder:
     def _load_cache(self):
         # Create cache file if it does not exist
         if not os.path.exists(self.cache_file):
-            open(self.cache_file, 'w').close()
+            open(self.cache_file, "w").close()
         with open(self.cache_file, "r") as cache_data:
             for line in cache_data:
                 record = json.loads(line)
@@ -48,11 +47,11 @@ class TextEncoder:
 
     def _safe_cache(self):
         with open(self.cache_file, "a") as cache_file:
-            for (md5, model, embedding) in self.cache_new:
+            for md5, model, embedding in self.cache_new:
                 record = {
                     "md5": md5,
                     "model": model,
-                    "embedding": numpy.around(embedding, decimals=5).tolist()
+                    "embedding": numpy.around(embedding, decimals=5).tolist(),
                 }
                 # Dump to json; save some space by removing unnecessary blanks
                 json_dump = json.dumps(record).replace(", ", ",")
@@ -62,7 +61,7 @@ class TextEncoder:
     def encode(self, texts) -> numpy.ndarray:
         embeddings = []
         for text in texts:
-            md5 = hashlib.md5(text.encode('utf-8')).hexdigest()
+            md5 = hashlib.md5(text.encode("utf-8")).hexdigest()
             embedding = self.cache.get((md5, self.model), None)
             if embedding is None:
                 embedding = self.sentence_transformer.encode([text])[0]
@@ -72,10 +71,13 @@ class TextEncoder:
                 batch_size = 200
                 if len(self.cache) % batch_size == 0:
                     print(
-                        f"INFO: Embedding calculation - next batch of {batch_size} embeddings of {len(texts)} completed")
+                        f"INFO: Embedding calculation - next batch of {batch_size} embeddings of {len(texts)} completed"
+                    )
                     self._safe_cache()
             embeddings.append([embedding])
             if len(embeddings) % 1000 == 0:
-                print(f"INFO: Embedding retrieval/calculation - {len(embeddings)} of {len(texts)} completed")
+                print(
+                    f"INFO: Embedding retrieval/calculation - {len(embeddings)} of {len(texts)} completed"
+                )
                 self._safe_cache()
         return numpy.concatenate(embeddings)

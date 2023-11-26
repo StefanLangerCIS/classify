@@ -2,6 +2,7 @@ import argparse
 import glob
 import json
 import os
+
 from langdetect import detect
 
 """
@@ -9,27 +10,30 @@ Utility script
 Add the language to a letter in a half-automated way
 """
 
+
 def main():
-    parser = argparse.ArgumentParser(description='Add language')
-    parser.add_argument('--input',
-                        default = r'D:\ProjectData\Uni\ltrs\data\letters\*\json\*.json',
-    help = 'The input and output directory')
+    parser = argparse.ArgumentParser(description="Add language")
+    parser.add_argument(
+        "--input",
+        default=r"D:\ProjectData\Uni\ltrs\data\letters\*\json\*.json",
+        help="The input and output directory",
+    )
 
     mapping = {
-        "Virginia Woolf" : ["en"],
-        "Henrik Ibsen" : ["da", "de"],
-        "James Joyce" : ["en", "fr", "it", "de"],
-        "Johann Wolfgang von Goethe" : ["de"],
-        "Friedrich Schiller" : ["de"],
+        "Virginia Woolf": ["en"],
+        "Henrik Ibsen": ["da", "de"],
+        "James Joyce": ["en", "fr", "it", "de"],
+        "Johann Wolfgang von Goethe": ["de"],
+        "Friedrich Schiller": ["de"],
         "Wilhelm Busch": ["de"],
-        "Антон Чехов" : ["ru"],
-        "Demosthenes" : ["el"],
-        "Avshalom Feinberg" : ["he"],
-        "Sigmund Freud" : ["de"],
+        "Антон Чехов": ["ru"],
+        "Demosthenes": ["el"],
+        "Avshalom Feinberg": ["he"],
+        "Sigmund Freud": ["de"],
         "Franz Kafka": ["de"],
-        "Петр Чаадаев" : ["ru"],
-        "Voltaire" : ["fr"],
-        "Fédéric, Le Prince Royal/Roi de Prusse" : ["fr"]
+        "Петр Чаадаев": ["ru"],
+        "Voltaire": ["fr"],
+        "Fédéric, Le Prince Royal/Roi de Prusse": ["fr"],
     }
     args = parser.parse_args()
     input_files = glob.glob(args.input)
@@ -46,15 +50,19 @@ def main():
         if json_data is None:
             continue
         # Already processed
-        if "lang" in json_data and json_data["lang"] != "unknown" and json_data["lang"] != "no":
+        if (
+            "lang" in json_data
+            and json_data["lang"] != "unknown"
+            and json_data["lang"] != "no"
+        ):
             continue
         author = json_data["author"]
         text = json_data["text"]
         # Old info, not needed any longer
-        if 'detected_language' in json_data:
-            del json_data['detected_language']
-        if 'language' in json_data:
-            del json_data['language']
+        if "detected_language" in json_data:
+            del json_data["detected_language"]
+        if "language" in json_data:
+            del json_data["language"]
         json_data["lang"] = "unknown"
         if author in mapping:
             expected_langs = mapping[author]
@@ -69,7 +77,11 @@ def main():
             if lang in expected_langs:
                 confirmed_lang = lang
             else:
-                print("\n{0},{1}: --- {2}\n\n>>>LANGUAGE:{3}\n".format(os.path.basename(input_file), author, text[0:200], lang))
+                print(
+                    "\n{0},{1}: --- {2}\n\n>>>LANGUAGE:{3}\n".format(
+                        os.path.basename(input_file), author, text[0:200], lang
+                    )
+                )
                 reply = ""
                 while len(reply) == 0:
                     reply = input("Correct? Y/N/<LANG>\n")
@@ -83,8 +95,5 @@ def main():
             json.dump(json_data, output_fp, indent=2, ensure_ascii=False)
 
 
- 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
-

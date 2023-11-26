@@ -38,6 +38,7 @@ class TextClustering(ABC):
     """
     Abstract base class for clustering
     """
+
     @abc.abstractmethod
     def cluster(self, data: List[dict], text_label: str) -> List[Cluster]:
         """
@@ -50,6 +51,3 @@ class TextClustering(ABC):
         Return an ordered list of Clusters
         """
         return []
-
-
-

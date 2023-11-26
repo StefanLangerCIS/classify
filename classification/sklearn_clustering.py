@@ -2,26 +2,33 @@
     They all have a similar interface, so the can be wrapped in one class
     Generic interface defined in TextClustering
 """
-from text_clustering import TextClustering, Cluster
-
 from collections import Counter
-import pandas
+from typing import List
+
 import numpy as np
-from sklearn.cluster import KMeans, AgglomerativeClustering, OPTICS
+import pandas
+from sklearn.cluster import OPTICS, AgglomerativeClustering, KMeans
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from sklearn.neighbors import NearestCentroid
 from sklearn.utils import shuffle
-from typing import List
+from text_clustering import Cluster, TextClustering
 
 
 class SklearnClustering(TextClustering):
     """
     Clustering with sklearn cluster algorithms
     """
-    supported_algos = ["KMeans", "AgglomerativeClustering_ward", "AgglomerativeClustering_single",
-                               "AgglomerativeClustering_complete", "AgglomerativeClustering_average", "OPTICS"]
 
-    def __init__(self, algorithm :str, n_clusters:int = 5, verbose = False):
+    supported_algos = [
+        "KMeans",
+        "AgglomerativeClustering_ward",
+        "AgglomerativeClustering_single",
+        "AgglomerativeClustering_complete",
+        "AgglomerativeClustering_average",
+        "OPTICS",
+    ]
+
+    def __init__(self, algorithm: str, n_clusters: int = 5, verbose=False):
         """
         Initialize the classifier
         :param algorithm: The name of the clustering algorithm
@@ -37,11 +44,17 @@ class SklearnClustering(TextClustering):
             self.sklearn_clustering = KMeans(verbose=verbose, n_clusters=n_clusters)
         elif algorithm.startswith("AgglomerativeClustering"):
             algo, linkage_method = algorithm.split("_")
-            self.sklearn_clustering = AgglomerativeClustering(linkage=linkage_method, n_clusters=n_clusters)
+            self.sklearn_clustering = AgglomerativeClustering(
+                linkage=linkage_method, n_clusters=n_clusters
+            )
         elif algorithm == "OPTICS":
             self.sklearn_clustering = OPTICS(min_samples=5)
         else:
-            raise Exception("Unsupported clustering type {0}. Use one of {1}".format(algorithm, self.supported_algos))
+            raise Exception(
+                "Unsupported clustering type {0}. Use one of {1}".format(
+                    algorithm, self.supported_algos
+                )
+            )
 
         self.algorithm = algorithm
         self.count_vectorizer = None
@@ -60,7 +73,9 @@ class SklearnClustering(TextClustering):
         self.text_label = text_label
         self.data_table = self._create_data_table(data_records, text_label)
         if self.count_vectorizer is None:
-            self.count_vectorizer = CountVectorizer(min_df=4, max_df=0.4, ngram_range=(1,1))
+            self.count_vectorizer = CountVectorizer(
+                min_df=4, max_df=0.4, ngram_range=(1, 1)
+            )
         matrix_counts = self.count_vectorizer.fit_transform(self.data_table.text)
         if self.tfidf_transformer is None:
             self.tfidf_transformer = TfidfTransformer(use_idf=True).fit(matrix_counts)
@@ -71,7 +86,9 @@ class SklearnClustering(TextClustering):
     # ********************************
     # Creation  of data table from data data_records
     # ********************************
-    def _create_data_table(self, data_records: List[dict], text_label: str) -> pandas.DataFrame:
+    def _create_data_table(
+        self, data_records: List[dict], text_label: str
+    ) -> pandas.DataFrame:
         """
         :param data_records: the records to create the data table for
         :param text_label: The label of the field which contains the text
@@ -142,7 +159,7 @@ class SklearnClustering(TextClustering):
             feature_names = self.count_vectorizer.get_feature_names()
             matrix_tf_idf = self.tfidf_transformer.transform(text_matrix)
             for tf in matrix_tf_idf:
-                sorted_features = np.argsort(tf.data)[:-(50 + 1):-1]
+                sorted_features = np.argsort(tf.data)[: -(50 + 1) : -1]
                 for feature in sorted_features:
                     feature_name = feature_names[tf.indices[feature]]
                     top_terms[feature_name] += 1
@@ -173,7 +190,7 @@ class SklearnClustering(TextClustering):
         :return: The cluster centers
         """
 
-        if (self.algorithm == "KMeans"):
+        if self.algorithm == "KMeans":
             return self.sklearn_clustering.cluster_centers_
         else:
             # Train classifier for the computed clusters and use the centroid

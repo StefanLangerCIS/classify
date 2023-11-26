@@ -2,21 +2,30 @@ import argparse
 import glob
 import json
 
-
 """
 Some repairs, make all letters uniform
 """
-def main():
-    parser = argparse.ArgumentParser(description='Script for reparing json format letters from input data in various formats (e.g. epub)')
-    parser.add_argument('--input',
-                        default = r'D:\ProjectData\Div\ltrs\data\letters\*\json\*.json',
-                        help='The input directory + input file pattern')
 
-    args = parser.parse_args() 
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Script for reparing json format letters from input data in various formats (e.g. epub)"
+    )
+    parser.add_argument(
+        "--input",
+        default=r"D:\ProjectData\Div\ltrs\data\letters\*\json\*.json",
+        help="The input directory + input file pattern",
+    )
+
+    args = parser.parse_args()
 
     letters = []
     input_files = glob.glob(args.input)
-    print("INFO: Fixing data in {0} input files in {1}".format(len(input_files), args.input))
+    print(
+        "INFO: Fixing data in {0} input files in {1}".format(
+            len(input_files), args.input
+        )
+    )
     valid_fields = {}
     for input_file in input_files:
         with open(input_file, "r", encoding="utf-8") as input:
@@ -30,9 +39,9 @@ def main():
                 valid_fields[field] = True
 
     # To be deleted from all records
-    #del valid_fields["recipient_original"]
-    #del valid_fields["author_original"]
-    #for field in valid_fields:
+    # del valid_fields["recipient_original"]
+    # del valid_fields["author_original"]
+    # for field in valid_fields:
     #    print(field)
     for input_file in input_files:
         with open(input_file, "r", encoding="utf-8") as input:
@@ -61,8 +70,10 @@ def main():
             del json_data["datetime"]
 
         with open(input_file, "w", encoding="utf-8") as output:
-            output.write(json.dumps(json_data, indent= 4, sort_keys = True, ensure_ascii = False))
+            output.write(
+                json.dumps(json_data, indent=4, sort_keys=True, ensure_ascii=False)
+            )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

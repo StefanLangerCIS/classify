@@ -2,10 +2,10 @@
 Remove and merge some labels in the original Huffington post data set
 """
 import argparse
-import random
-from collections import Counter
 import json
 import os
+import random
+from collections import Counter
 
 # Data directory. Follow structure with default or
 # set the CLS_SRCH_DATA_DIR environment directory
@@ -15,19 +15,23 @@ DATA_DIR = os.getenv("CLS_SRCH_DATA_DIR", _default_data_dir)
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Huffington Post: reduce the labels')
+    parser = argparse.ArgumentParser(description="Huffington Post: reduce the labels")
 
-    parser.add_argument('--input',
-                        default=os.path.join(DATA_DIR, "news/classification_news_original.jsonl"),
-                        help='All data, the data_records to be split. One json record per line')
+    parser.add_argument(
+        "--input",
+        default=os.path.join(DATA_DIR, "news/classification_news_original.jsonl"),
+        help="All data, the data_records to be split. One json record per line",
+    )
 
-    parser.add_argument('--output',
-                        default=os.path.join(DATA_DIR, "news/classification_news.jsonl"),
-                        help='Folder where the split data set will be put')
+    parser.add_argument(
+        "--output",
+        default=os.path.join(DATA_DIR, "news/classification_news.jsonl"),
+        help="Folder where the split data set will be put",
+    )
 
-    parser.add_argument('--label',
-                        default="category",
-                        help='The label for the category to process')
+    parser.add_argument(
+        "--label", default="category", help="The label for the category to process"
+    )
 
     args = parser.parse_args()
 
@@ -40,8 +44,8 @@ def main():
         "FOOD & DRINK": "TASTE",
         "THE WORLDPOST": "WORLD",
         "WORLD NEWS": "WORLD",
-        "WORLDPOST" : "WORLD",
-        "LATINO VOICES": None
+        "WORLDPOST": "WORLD",
+        "LATINO VOICES": None,
     }
 
     # Read the input data

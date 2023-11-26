@@ -1,12 +1,13 @@
 import abc
 from abc import ABC
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 
 class ClassifierResult:
     """
     Generic class for holding a classifier result
     """
+
     def __init__(self, class_name: str, class_score=-1, meta_information=""):
         """
         :param class_name: can be any string
@@ -43,7 +44,9 @@ class TextClassifier(ABC):
         return {"AbstractClassifier": True}
 
     @abc.abstractmethod
-    def train(self, training_data: str, text_label: List[str], class_label: str) -> None:
+    def train(
+        self, training_data: str, text_label: List[str], class_label: str
+    ) -> None:
         """
         Train using the training data
         :param training_data: file with json data, one json record per line

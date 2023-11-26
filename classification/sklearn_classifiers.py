@@ -1,47 +1,61 @@
-""" Classifiers based on the sklearn
+""" Classifiers based on scikit-learn
     They all have the same interface, so the can be wrapped in one class
     Derived from TextClassifier
 """
+import json
+import os
 import random
 import re
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 import numpy
+import pandas
 import pandas as pd
 from sentence_transformers import SentenceTransformer
 from sklearn.decomposition import TruncatedSVD
-
-from classification.text_encoder import TextEncoder
-from classification.text_classifier import TextClassifier, ClassifierResult
-
-import json
-import os
-import pandas
-
-# Sklearn: Classifiers
-from sklearn.tree import DecisionTreeClassifier, export_text
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.neural_network import MLPClassifier
-from sklearn.naive_bayes import GaussianNB, MultinomialNB
-from sklearn.linear_model import LogisticRegression
-from sklearn.linear_model import Perceptron
 
 # Sklearn: Other utils
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
-from sklearn.utils import shuffle
+from sklearn.linear_model import LogisticRegression, Perceptron
+from sklearn.naive_bayes import GaussianNB, MultinomialNB
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neural_network import MLPClassifier
 from sklearn.svm import LinearSVC
+
+# Sklearn: Classifiers
+from sklearn.tree import DecisionTreeClassifier, export_text
+from sklearn.utils import shuffle
+
+from classification.text_classifier import ClassifierResult, TextClassifier
+from classification.text_encoder import TextEncoder
 
 
 class SklearnClassifier(TextClassifier):
     """
     Classify with sklearn classifiers
     """
-    supported_classifiers = ["DecisionTreeClassifier", "RandomForestClassifier", "LogisticRegression", "MLPClassifier",
-                             "GaussianNB", "MultinomialNB", "KNeighborsClassifier", "LinearSVC", "Perceptron"]
 
-    def __init__(self, classifier_type: str, dense: bool = False, lsa: bool = False, model_folder_path: str = None,
-                 verbose=False):
+    supported_classifiers = [
+        "DecisionTreeClassifier",
+        "RandomForestClassifier",
+        "LogisticRegression",
+        "MLPClassifier",
+        "GaussianNB",
+        "MultinomialNB",
+        "KNeighborsClassifier",
+        "LinearSVC",
+        "Perceptron",
+    ]
+
+    def __init__(
+        self,
+        classifier_type: str,
+        dense: bool = False,
+        lsa: bool = False,
+        model_folder_path: str = None,
+        verbose=False,
+    ):
         """
         Initialize the classifier
         :param classifier_type: The name of the classifiers
@@ -67,7 +81,9 @@ class SklearnClassifier(TextClassifier):
         if classifier_type == "KNeighborsClassifier":
             self.sklearn_classifier = KNeighborsClassifier(n_neighbors=7, n_jobs=-1)
         elif classifier_type == "MLPClassifier":
-            self.sklearn_classifier = MLPClassifier(hidden_layer_sizes=(50,), activation='logistic')
+            self.sklearn_classifier = MLPClassifier(
+                hidden_layer_sizes=(50,), activation="logistic"
+            )
         elif classifier_type == "LinearSVC":
             self.sklearn_classifier = LinearSVC()
         elif classifier_type == "GaussianNB":
@@ -79,12 +95,15 @@ class SklearnClassifier(TextClassifier):
         elif classifier_type == "RandomForestClassifier":
             self.sklearn_classifier = RandomForestClassifier(n_estimators=10, n_jobs=-1)
         elif classifier_type == "DecisionTreeClassifier":
-            self.sklearn_classifier = DecisionTreeClassifier(min_samples_split=10, max_features='sqrt')
+            self.sklearn_classifier = DecisionTreeClassifier(
+                min_samples_split=10, max_features="sqrt"
+            )
         elif classifier_type == "Perceptron":
             self.sklearn_classifier = Perceptron()
         else:
             raise Exception(
-                f"Unsupported classifier type {classifier_type}. Use one of {self.supported_classifiers}")
+                f"Unsupported classifier type {classifier_type}. Use one of {self.supported_classifiers}"
+            )
 
         self.classifier_type = classifier_type
         self.dense = dense
@@ -129,7 +148,13 @@ class SklearnClassifier(TextClassifier):
         result = ClassifierResult(predicted_class, -1, "")
         return [result]
 
-    def train(self, training_data: str, text_label: List[str], class_label: str, max_data: int = 0) -> None:
+    def train(
+        self,
+        training_data: str,
+        text_label: List[str],
+        class_label: str,
+        max_data: int = 0,
+    ) -> None:
         """
         Train the classifier
         :param training_data: File name. Training data is one json per line
@@ -166,7 +191,7 @@ class SklearnClassifier(TextClassifier):
     def _print_decision_tree(self):
         """
         Print decision tree rules
-        :return: 
+        :return:
         """
         rules_text = export_text(self.sklearn_classifier, max_depth=100)
         # Vocabulary for replacement in the data which contains
@@ -188,9 +213,13 @@ class SklearnClassifier(TextClassifier):
             else:
                 lines.append(rule)
 
-        with open(os.path.join(self.model_folder_path, "decision_rules.txt"), 'w', encoding='utf-8') as out:
+        with open(
+            os.path.join(self.model_folder_path, "decision_rules.txt"),
+            "w",
+            encoding="utf-8",
+        ) as out:
             for line in lines:
-                out.write(line + '\n')
+                out.write(line + "\n")
 
     def _train_tfidf_matrix(self, data_train: pd.DataFrame) -> numpy.ndarray:
         """
@@ -200,10 +229,14 @@ class SklearnClassifier(TextClassifier):
         """
         print("INFO: creating TF-IDF Matrix")
         if self.count_vectorizer is None:
-            self.count_vectorizer = CountVectorizer(min_df=2, max_df=0.8, ngram_range=(1, 1))
+            self.count_vectorizer = CountVectorizer(
+                min_df=2, max_df=0.8, ngram_range=(1, 1)
+            )
         matrix_train_counts = self.count_vectorizer.fit_transform(data_train.text)
         if self.tfidf_transformer is None:
-            self.tfidf_transformer = TfidfTransformer(use_idf=True).fit(matrix_train_counts)
+            self.tfidf_transformer = TfidfTransformer(use_idf=True).fit(
+                matrix_train_counts
+            )
         matrix_train = self.tfidf_transformer.transform(matrix_train_counts)
         print("INFO: TF-IDF matrix creation completed")
         if self.lsa:
@@ -230,16 +263,20 @@ class SklearnClassifier(TextClassifier):
         Create a dense matrix based on some deep learning model
         :param data: The data to create the dense matrix from
         :return: 
-        """""
+        """ ""
         if self.sentence_transformer is None:
             embeddings_cache = os.path.join(self.model_folder_path, "embeddings.jsonl")
-            embeddings_cache_english = os.path.join(self.model_folder_path, "embedding_english.jsonl")
+            embeddings_cache_english = os.path.join(
+                self.model_folder_path, "embedding_english.jsonl"
+            )
             # Model selected for good speed and ok-ish performance
             # see https://www.sbert.net/docs/pretrained_models.html
             # Multilingual
             # self.sentence_transformer = TextEncoder('paraphrase-multilingual-MiniLM-L12-v2', cache_file=embeddings_cache)
             # Monolingual
-            self.sentence_transformer = TextEncoder('all-MiniLM-L12-v2', cache_file=embeddings_cache_english)
+            self.sentence_transformer = TextEncoder(
+                "all-MiniLM-L12-v2", cache_file=embeddings_cache_english
+            )
 
         encoded = self.sentence_transformer.encode(data.text)
         return encoded
@@ -248,11 +285,13 @@ class SklearnClassifier(TextClassifier):
 # ********************************
 # Creation  of data to classify
 # ********************************
-def get_data_records_from_file(training_file: str, text_label: List[str], class_label: str, mx: int = 0):
+def get_data_records_from_file(
+    training_file: str, text_label: List[str], class_label: str, mx: int = 0
+):
     """
     Retrieve the data records from file (for training)
     """
-    with open(training_file, encoding='utf-8') as training_fp:
+    with open(training_file, encoding="utf-8") as training_fp:
         data_records = []
         for line in training_fp:
             record = json.loads(line)

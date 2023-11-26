@@ -1,36 +1,36 @@
 """ Grid search implementation
 """
 
+from typing import Dict
+
 # Sklearn: Classifiers
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import GridSearchCV
 
 # Sklearn: Other utils
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
+from sklearn.model_selection import GridSearchCV
 from sklearn.neural_network import MLPClassifier
-
 from sklearn_classifiers import create_data_table_from_training_file
-
-from typing import Dict
 
 
 class SklearnGridSearch:
     """
     Run grid search with selected sklearn classifiers
     """
+
     grid = {
-        "RandomForestClassifier" : {
+        "RandomForestClassifier": {
             "criterion": ["gini", "entropy"],
             "max_depth": [5, 10, 20, 40, 100, 200],
-            "min_samples_leaf": [1, 2, 4, 8]
+            "min_samples_leaf": [1, 2, 4, 8],
         },
-        "MLPClassifier" : {
+        "MLPClassifier": {
             "activation": ["logistic", "relu"],
-            "hidden_layer_sizes": [(10,), (20, ), (50, )]
-        }
+            "hidden_layer_sizes": [(10,), (20,), (50,)],
+        },
     }
 
-    def __init__(self, classifier_type :str, parameters: Dict, verbose=False):
+    def __init__(self, classifier_type: str, parameters: Dict, verbose=False):
         """
         Initialize the classifier
         :param classifier_type: The name of the classifiers
@@ -40,7 +40,9 @@ class SklearnGridSearch:
         self.verbose = verbose
 
         if classifier_type not in self.grid:
-            raise Exception(f"Unsupported classifier type {classifier_type}. Use one of {self.grid.keys()}")
+            raise Exception(
+                f"Unsupported classifier type {classifier_type}. Use one of {self.grid.keys()}"
+            )
 
         if classifier_type == "RandomForestClassifier":
             self.sklearn_classifier = RandomForestClassifier()
@@ -50,10 +52,14 @@ class SklearnGridSearch:
         self.parameters = parameters
 
         self.classifier_type = classifier_type
-        self.count_vectorizer = CountVectorizer(min_df=10, max_df=0.8, ngram_range=(1, 1))
+        self.count_vectorizer = CountVectorizer(
+            min_df=10, max_df=0.8, ngram_range=(1, 1)
+        )
         self.tfidf_transformer = TfidfTransformer(use_idf=True)
 
-    def grid_search(self, training_data: str, text_label: str, class_label: str) -> Dict:
+    def grid_search(
+        self, training_data: str, text_label: str, class_label: str
+    ) -> Dict:
         """
         Train the classifier
         :param training_data: File name. Training data is one json per line
@@ -65,7 +71,9 @@ class SklearnGridSearch:
         Train the algorithm with the data from the knowledge graph
         """
 
-        data_train = create_data_table_from_training_file(training_data, text_label, class_label, 10000)
+        data_train = create_data_table_from_training_file(
+            training_data, text_label, class_label, 10000
+        )
         print(f"INFO: grid evaluation with {len(data_train)} data points")
         data_train = data_train.fillna(0)
 
@@ -78,6 +86,3 @@ class SklearnGridSearch:
         grid_search.fit(matrix_train_tf, data_train.label)
         print(grid_search.best_params_)
         return grid_search.best_params_
-
-
-
