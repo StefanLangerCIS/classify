@@ -1,4 +1,6 @@
 import abc
+import json
+import random
 from abc import ABC
 from typing import Any, Dict, List
 
@@ -44,27 +46,58 @@ class TextClassifier(ABC):
         return {"AbstractClassifier": True}
 
     @abc.abstractmethod
-    def train(
-        self, training_data: str, text_label: List[str], class_label: str
-    ) -> None:
+    def train(self, training_data: List[Dict]) -> None:
         """
-        Train using the training data
-        :param training_data: file with json data, one json record per line
-        :param text_label: list of json fields which contain the text
-        :param class_label:  the json field which contains the label
+        Train the classifier
+        :param training_data: List of training data points with fields 'text' and 'label'
         :return: Nothing
         """
         return
 
     @abc.abstractmethod
-    def classify(self, data, text_label: List[str]) -> List[ClassifierResult]:
+    def classify(self, data) -> List[ClassifierResult]:
         """
         Classify a given text
-        :param data: dictionary (parsed json) - the record to classify
-        :param text_label: list of json fields which contain the text
+        :param data: dictionary (parsed json) - the record to classify, needs field 'text'
         :return: List of predicted classes (for most classifier, just one class)
         """
         """
         Return an ordered list of ClassifierResults
         """
         return []
+
+
+def get_data_records_from_file(
+    training_file: str, text_label: List[str], class_label: str, mx: int = 0
+) -> List[Dict]:
+    """
+    Retrieve the data records from file (for training)
+    """
+    with open(training_file, encoding="utf-8") as training_fp:
+        data_records = []
+        for line in training_fp:
+            record = json.loads(line)
+            data_record = {}
+            data_record["text"] = " ".join([record[x] for x in text_label])
+            data_record["label"] = record[class_label]
+            data_records.append(data_record)
+
+    if mx is not None and mx > 0:
+        data_records = random.sample(data_records, mx)
+
+    return data_records
+
+
+def get_data_points(
+    training_data: [str, List[Dict]], text_labels: List[str], class_label
+) -> List[Dict]:
+    """
+    Get the data points from a file or return what you already have.
+
+    :param training_data: Input data, a file name or the already prepared input data
+    :param text_labels:
+    :param class_label:
+    :return:
+    """
+
+    return data_points

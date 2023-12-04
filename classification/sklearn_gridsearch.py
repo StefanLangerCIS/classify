@@ -5,12 +5,12 @@ from typing import Dict
 
 # Sklearn: Classifiers
 from sklearn.ensemble import RandomForestClassifier
-
 # Sklearn: Other utils
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from sklearn.model_selection import GridSearchCV
 from sklearn.neural_network import MLPClassifier
-from classification.sklearn_classifiers import get_data_records_from_file
+
+from classification.text_classifier import get_data_records_from_file
 
 
 class SklearnGridSearch:

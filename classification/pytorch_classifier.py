@@ -12,8 +12,9 @@ from torch.utils.data import DataLoader
 from torchtext.data.utils import get_tokenizer
 from torchtext.vocab import build_vocab_from_iterator
 
-from classification import sklearn_classifiers
-from classification.text_classifier import ClassifierResult, TextClassifier
+import classification.text_classifier
+from classification.text_classifier import (ClassifierResult, TextClassifier,
+                                            get_data_records_from_file)
 
 
 class TorchTextClassificationModel(nn.Module):
@@ -48,7 +49,7 @@ class TorchTextClassificationModel(nn.Module):
         return self.linear(embedded)
 
 
-class PyTorchClassifier(TextClassifier):
+class TorchClassifier(TextClassifier):
     """
     Classify with a pytorch classifier
     """
@@ -76,8 +77,6 @@ class PyTorchClassifier(TextClassifier):
         if not os.path.exists(self.model_folder_path):
             os.makedirs(self.model_folder_path)
 
-        # Store the file path of the training data
-        self.training_data = None
         self.verbose = verbose
         self.classifier_name = "pytorch"
 
@@ -102,7 +101,7 @@ class PyTorchClassifier(TextClassifier):
     def info(self) -> Dict[str, Any]:
         return {"embedding_size": self.embedding_size, "tokenizer": self.tokenizer_name}
 
-    def classify(self, data: dict, text_label: List[str]) -> List[ClassifierResult]:
+    def classify(self, data: dict) -> List[ClassifierResult]:
         """
         Classify a record. The record can have multiple fields with text
 
@@ -110,34 +109,27 @@ class PyTorchClassifier(TextClassifier):
         :param text_label: The key(s) in the data which point to the text to classify
         :return: A list with one classifier result
         """
-        text = data.get(text_label, "")
+        text = data.get("text", "")
         with torch.no_grad():
             text = torch.tensor(self.text_pipeline(text))
             output = self.model(text, torch.tensor([0]))
             label_number = output.argmax(1).item()
-            return self._get_label_name(label_number)
+            classifier_result = ClassifierResult(self._get_label_name(label_number))
+            return [classifier_result]
 
-    def train(
-        self, training_data: str, text_label: List[str], class_label: str
-    ) -> None:
+    def train(self, training_data: List[Dict]) -> None:
         """
         Train the classifier
-        :param training_data: File path. Training data is one json per line
-        :param text_label: Json field which contains the text
-        :param class_label:  Json field which contains the label for the classes to train
+        :param training_data: List of training data points with fields 'text' and 'label'
         :return: Nothing
         """
-        self.training_data = training_data
-        data_records = sklearn_classifiers.get_data_records_from_file(
-            training_data, text_label, class_label
-        )
-        random.shuffle(data_records)
-        split = int(len(data_records) * 0.8)
-        data_records_train = data_records[0:split]
-        data_records_validate = data_records[split:]
+        random.shuffle(training_data)
+        split = int(len(training_data) * 0.8)
+        data_records_train = training_data[0:split]
+        data_records_validate = training_data[split:]
         # Add the "tokens" field to each data record
-        self._tokenize(data_records)
-        all_tokens = itertools.chain([x["tokens"] for x in data_records])
+        self._tokenize(training_data)
+        all_tokens = itertools.chain([x["tokens"] for x in training_data])
         self.vocab = build_vocab_from_iterator(all_tokens, specials=["<unk>"])
         self.vocab.set_default_index(self.vocab["<unk>"])
 
@@ -146,12 +138,12 @@ class PyTorchClassifier(TextClassifier):
         self.text_pipeline = lambda x: self.vocab(self.tokenizer(x))
 
         # Provide a mapping from label names to int labels and vice versa
-        label_list = [x["label"] for x in data_records]
+        label_list = [x["label"] for x in training_data]
         for idx, label in enumerate(sorted(set(label_list))):
             self.label2number[label] = idx
 
         # Add label number to records
-        for data_record in data_records:
+        for data_record in training_data:
             label_name = data_record["label"]
             data_record["label_number"] = self.label2number[label_name]
 

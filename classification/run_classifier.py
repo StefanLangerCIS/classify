@@ -6,6 +6,7 @@ import json
 import os
 import time
 import warnings
+from datetime import datetime
 from typing import Dict, List
 
 import matplotlib.pyplot as plt
@@ -15,7 +16,9 @@ import sklearn.metrics
 from sklearn.metrics import confusion_matrix
 from sklearn.utils.multiclass import unique_labels
 
+from classification.pytorch_classifier import TorchClassifier
 from classification.sklearn_classifiers import SklearnClassifier
+from classification.text_classifier import get_data_records_from_file
 
 # Data directory. Follow structure with default or
 # set the CLS_SRCH_DATA_DIR environment directory
@@ -104,7 +107,7 @@ def count_lines(file: str) -> int:
 
 def run_classifier(
     classifier_type: str,
-    training_data: str,
+    training_data_file: str,
     test_data: str,
     class_label: str,
     text_labels: List[str],
@@ -118,7 +121,7 @@ def run_classifier(
     Run classifier of classifier_type
 
     :param classifier_type: The classifier algorithm
-    :param training_data: jsonl training data
+    :param training_data_file: jsonl training data
     :param test_data: jsonl data to classify
     :param class_label: The class label in the training data
     :param text_labels: The keys in the json which point to the text
@@ -129,17 +132,25 @@ def run_classifier(
     :param verbose: Verbose output
     :return: The classification report as dictionary
     """
-    classifier = SklearnClassifier(classifier_type, dense=dense, lsa=lsa)
+    if "torch" in classifier_type:
+        classifier = TorchClassifier()
+    else:
+        classifier = SklearnClassifier(classifier_type, dense=dense, lsa=lsa)
+
     print(f"INFO: Evaluating classification of classifier {classifier.name()}")
     training_time = 0
-    n_training_lines = count_lines(training_data)
-    if training_data is not None:
-        print(f"INFO: Reading training data from {training_data}")
+    if training_data_file is not None:
+        training_data = get_data_records_from_file(
+            training_data_file, text_labels, class_label, max_train
+        )
+        print(
+            f"INFO: Read {len(training_data)} training records from  from {training_data_file}"
+        )
         training_time = time.time()
         print(
             f"INFO: Training classifier {classifier_type} with text fields {text_labels} for label {class_label}"
         )
-        classifier.train(training_data, text_labels, class_label, max_train)
+        classifier.train(training_data)
         training_time = int(time.time() - training_time)
         print(f"INFO: Training completed in {training_time} seconds")
     else:
@@ -157,7 +168,8 @@ def run_classifier(
     with open(test_data, encoding="utf-8") as infile:
         for line in infile:
             json_data = json.loads(line)
-            res = classifier.classify(json_data, text_labels)
+            json_data["text"] = " ".join([json_data[x] for x in text_labels])
+            res = classifier.classify(json_data)
             class_name = "none"
             if len(res) > 0:
                 class_name = res[0].class_name
@@ -169,7 +181,7 @@ def run_classifier(
         f"INFO: Classification completed for classifier {classifier.name()} in {classification_time} s"
     )
 
-    outfile_identifier = f"results_{classifier.name()}_{class_label}"
+    outfile_identifier = f"results_{classifier.name()}_{class_label}_{datetime.now().strftime('%m_%d_%Y_%H_%M_%S')}"
     outfile_name = os.path.join(output, f"{outfile_identifier}.txt")
     print(f"INFO: Writing results of classifier {classifier.name()} to {outfile_name}")
     with open(outfile_name, "w", encoding="utf-8") as outfile:
@@ -180,7 +192,7 @@ def run_classifier(
         outfile.write(f"Text labels: {text_labels}\n")
         outfile.write(f"Dense|LSA: {dense}|{lsa}\n")
         outfile.write("\n#Counts:\n")
-        outfile.write(f"Number of training data_records: {n_training_lines}\n")
+        outfile.write(f"Number of training data_records: {len(training_data_file)}\n")
         outfile.write(f"Number of classified data_records: {len(expected_classes)}\n")
         outfile.write(
             f"Number of unique classes in data_records: {len(set(expected_classes))}\n"
@@ -250,7 +262,7 @@ def main():
 
     parser.add_argument(
         "--classifier",
-        choices=classifier_types + ["all"],
+        choices=classifier_types + ["torch", "all"],
         default="MLPClassifier",
         help="The classifier to use. If 'all' iterate through all available classifiers",
     )

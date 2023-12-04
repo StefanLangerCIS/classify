@@ -2,19 +2,15 @@
     They all have the same interface, so the can be wrapped in one class
     Derived from TextClassifier
 """
-import json
 import os
-import random
 import re
 from typing import Any, Dict, List
 
 import numpy
 import pandas
 import pandas as pd
-from sentence_transformers import SentenceTransformer
 from sklearn.decomposition import TruncatedSVD
 from sklearn.ensemble import RandomForestClassifier
-
 # Sklearn: Other utils
 from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from sklearn.linear_model import LogisticRegression, Perceptron
@@ -22,12 +18,12 @@ from sklearn.naive_bayes import GaussianNB, MultinomialNB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.svm import LinearSVC
-
 # Sklearn: Classifiers
 from sklearn.tree import DecisionTreeClassifier, export_text
 from sklearn.utils import shuffle
 
-from classification.text_classifier import ClassifierResult, TextClassifier
+from classification.text_classifier import (ClassifierResult, TextClassifier,
+                                            get_data_records_from_file)
 from classification.text_encoder import TextEncoder
 
 
@@ -74,8 +70,6 @@ class SklearnClassifier(TextClassifier):
         if not os.path.exists(self.model_folder_path):
             os.makedirs(self.model_folder_path)
 
-        # Store the file path of the training data
-        self.training_data = None
         self.verbose = verbose
 
         if classifier_type == "KNeighborsClassifier":
@@ -91,7 +85,7 @@ class SklearnClassifier(TextClassifier):
         elif classifier_type == "MultinomialNB":
             self.sklearn_classifier = MultinomialNB(alpha=0.01)
         elif classifier_type == "LogisticRegression":
-            self.sklearn_classifier = LogisticRegression()
+            self.sklearn_classifier = LogisticRegression(solver="sag", n_jobs=6)
         elif classifier_type == "RandomForestClassifier":
             self.sklearn_classifier = RandomForestClassifier(n_estimators=10, n_jobs=-1)
         elif classifier_type == "DecisionTreeClassifier":
@@ -125,18 +119,14 @@ class SklearnClassifier(TextClassifier):
     def info(self) -> Dict[str, Any]:
         return self.sklearn_classifier.get_params()
 
-    def classify(self, data: dict, text_label: List[str]) -> List[ClassifierResult]:
+    def classify(self, data: dict) -> List[ClassifierResult]:
         """
         Classify a record. The record can have multiple fields with text
 
         :param data: The data dictionary
-        :param text_label: The key(s) in the data which point to the text to classify
         :return: A list with one classifier result
         """
-
-        data_point = {}
-        data_point["text"] = " ".join([data[x] for x in text_label])
-        data_table = create_data_table([data_point])
+        data_table = create_data_table([data])
         if self.dense:
             matrix = self._create_dense_matrix(data_table)
         else:
@@ -148,26 +138,13 @@ class SklearnClassifier(TextClassifier):
         result = ClassifierResult(predicted_class, -1, "")
         return [result]
 
-    def train(
-        self,
-        training_data: str,
-        text_label: List[str],
-        class_label: str,
-        max_data: int = 0,
-    ) -> None:
+    def train(self, training_data: List[Dict]) -> None:
         """
         Train the classifier
-        :param training_data: File name. Training data is one json per line
-        :param text_label: Json field which contains the text
-        :param class_label:  Json field which contains the label for the classes to train
-        :param max_data: maximum number of data to use for training 0 for all data
+        :param training_data: List of training data points with fields 'text' and 'label'
         :return: Nothing
         """
-        self.training_data = training_data
-        data_points = get_data_records_from_file(training_data, text_label, class_label)
-        data_train = create_data_table(data_points)
-        if max_data > 0:
-            data_train = data_train[0:max_data]
+        data_train = create_data_table(training_data)
         if self.dense:
             matrix_train = self._create_dense_matrix(data_train)
         else:
@@ -230,7 +207,7 @@ class SklearnClassifier(TextClassifier):
         print("INFO: creating TF-IDF Matrix")
         if self.count_vectorizer is None:
             self.count_vectorizer = CountVectorizer(
-                min_df=2, max_df=0.8, ngram_range=(1, 1)
+                min_df=3, max_df=0.8, ngram_range=(1, 1)
             )
         matrix_train_counts = self.count_vectorizer.fit_transform(data_train.text)
         if self.tfidf_transformer is None:
@@ -285,25 +262,6 @@ class SklearnClassifier(TextClassifier):
 # ********************************
 # Creation  of data to classify
 # ********************************
-def get_data_records_from_file(
-    training_file: str, text_label: List[str], class_label: str, mx: int = 0
-):
-    """
-    Retrieve the data records from file (for training)
-    """
-    with open(training_file, encoding="utf-8") as training_fp:
-        data_records = []
-        for line in training_fp:
-            record = json.loads(line)
-            data_record = {}
-            data_record["text"] = " ".join([record[x] for x in text_label])
-            data_record["label"] = record[class_label]
-            data_records.append(data_record)
-
-    if mx is not None and mx > 0:
-        data_records = random.sample(data_records, mx)
-
-    return data_records
 
 
 def create_data_table(data_records: List) -> pandas.DataFrame:

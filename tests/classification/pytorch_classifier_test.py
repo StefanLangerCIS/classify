@@ -1,6 +1,6 @@
 import unittest
 
-from classification.pytorch_classifier import PyTorchClassifier
+from classification.pytorch_classifier import TorchClassifier
 from tests.classification.run_classifier_test import get_test_files
 
 
@@ -10,7 +10,7 @@ class TestRunClassifier(unittest.TestCase):
         class_label = "lang"
         text_labels = ["text"]
 
-        pytorch_classifier = PyTorchClassifier()
+        pytorch_classifier = TorchClassifier()
         pytorch_classifier.train(training_data, text_labels, class_label)
         prediction = pytorch_classifier.classify(
             {"text": "Dies ist ein Brief von Friedrich an Wolfgang. Welche Sprache?"},
