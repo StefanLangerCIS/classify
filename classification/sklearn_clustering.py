@@ -48,7 +48,7 @@ class SklearnClustering(TextClustering):
                 linkage=linkage_method, n_clusters=n_clusters
             )
         elif algorithm == "OPTICS":
-            self.sklearn_clustering = OPTICS(min_samples=5)
+            self.sklearn_clustering = OPTICS()
         else:
             raise Exception(
                 "Unsupported clustering type {0}. Use one of {1}".format(
@@ -59,22 +59,25 @@ class SklearnClustering(TextClustering):
         self.algorithm = algorithm
         self.count_vectorizer = None
         self.tfidf_transformer = None
+        self.text_labels = None
+        self.data_table = None
+        self.matrix_tfidf = None
 
-    def cluster(self, data_records: List[dict], text_label: str) -> List[Cluster]:
+    def cluster(self, data_records: List[dict], text_labels: List[str]) -> List[Cluster]:
         """
         Cluster
         :param data_records: List of dicts (data records)
-        :param text_label: Json field which contains the text
+        :param text_labels: Json fields which contain the text
         :return: The list of created clusters
         """
         """
         Train the algorithm with the data from the knowledge graph
         """
-        self.text_label = text_label
-        self.data_table = self._create_data_table(data_records, text_label)
+        self.text_labels = text_labels
+        self.data_table = self._create_data_table(data_records, text_labels)
         if self.count_vectorizer is None:
             self.count_vectorizer = CountVectorizer(
-                min_df=4, max_df=0.4, ngram_range=(1, 1)
+                min_df=5, max_df=0.3, ngram_range=(1, 1)
             )
         matrix_counts = self.count_vectorizer.fit_transform(self.data_table.text)
         if self.tfidf_transformer is None:
@@ -87,11 +90,11 @@ class SklearnClustering(TextClustering):
     # Creation  of data table from data data_records
     # ********************************
     def _create_data_table(
-        self, data_records: List[dict], text_label: str
+        self, data_records: List[dict], text_labels: List[str]
     ) -> pandas.DataFrame:
         """
         :param data_records: the records to create the data table for
-        :param text_label: The label of the field which contains the text
+        :param text_labels: The labels of the fields which contains the text
         :return: The data frame
         """
         self.data_records = {}
@@ -102,7 +105,7 @@ class SklearnClustering(TextClustering):
             # Store the original data records. We want to add them to the cluster info later
             self.data_records[record_number] = record
             datapoint = {}
-            datapoint["text"] = record[text_label]
+            datapoint["text"] = ". ".join([record.get(label, "") for label in text_labels])
             datapoint["id"] = record_number
             data_points.append(datapoint)
 
@@ -172,7 +175,7 @@ class SklearnClustering(TextClustering):
         :param cluster: The cluster to add the diescription to
         :return:
         """
-        feature_names = self.count_vectorizer.get_feature_names()
+        feature_names = self.count_vectorizer.get_feature_names_out()
         terms_with_tfidf = []
         for i in range(0, len(cluster.cluster_center)):
             value = cluster.cluster_center[i]

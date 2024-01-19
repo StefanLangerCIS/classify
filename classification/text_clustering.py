@@ -6,9 +6,9 @@ from typing import List
 class ClusteredDataPoint:
     def __init__(self, cluster_id: int, cluster_score: float, data_point: dict):
         """
-        :param cluster_ide: can be any string
+        :param cluster_id: can be any string
         :param cluster_score: How strongly assigned to the cluster. Any number. Optimally normalized to value between 0...1
-        :param meta_information: any text information you would like to add to the result
+        :param data_point: The cluster data
         """
         self.cluster_id = cluster_id
         self.cluster_score = cluster_score
@@ -18,7 +18,7 @@ class ClusteredDataPoint:
 class Cluster:
     def __init__(self, cluster_id: int, cluster_description: str):
         """
-        :param cluster_ide: can be any string
+        :param cluster_id: can be any string
         :param cluster_score: How strongly assigned to the cluster. Any number. Optimally normalized to value between 0...1
         :param meta_information: any text information you would like to add to the result
         """
