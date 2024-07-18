@@ -3,6 +3,7 @@
 
 from typing import Dict
 
+import pandas as pd
 # Sklearn: Classifiers
 from sklearn.ensemble import RandomForestClassifier
 # Sklearn: Other utils
@@ -10,7 +11,7 @@ from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from sklearn.model_selection import GridSearchCV
 from sklearn.neural_network import MLPClassifier
 
-from classification.text_classifier import get_data_records_from_file
+from classification.classify.text_classifier import get_data_records_from_file
 
 
 class SklearnGridSearch:
@@ -71,10 +72,11 @@ class SklearnGridSearch:
         """
 
         data_train = get_data_records_from_file(
-            training_data, text_label, class_label, 10000
+            training_data, [text_label], class_label, 10000
         )
         print(f"INFO: grid evaluation with {len(data_train)} data points")
-        data_train = data_train.fillna(0)
+        data_train = pd.DataFrame.from_dict(data_train)
+        data_train.fillna("", inplace=True)
 
         matrix_train_counts = self.count_vectorizer.fit_transform(data_train.text)
         self.tfidf_transformer = self.tfidf_transformer.fit(matrix_train_counts)

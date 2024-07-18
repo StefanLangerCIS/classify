@@ -4,26 +4,28 @@
 import hashlib
 import json
 import os
-import re
-from typing import Dict, List
 
 import numpy
-import pandas as pd
 from sentence_transformers import SentenceTransformer
 
 
-class TextEncoder:
+class TextEmbedder:
     """
-    Encode some text
+    Embed some text
     """
 
-    def __init__(self, model: str, cache_file: str):
+    def __init__(self, model: str, cache_file: str | None):
         """
         Initialize the encoder, based on sentence transformers
         :param model: The model to load
         :param cache_file: The file used to keep the cache
         """
         self.cache_file = cache_file
+        if not self.cache_file:
+            cache_dir = os.path.join(os.path.dirname(__file__), "cache")
+            if not os.path.exists(cache_dir):
+                os.mkdir(cache_dir)
+            self.cache_file = os.path.join(cache_dir, "embedding_cache.json")
         # The cache, loaded at initialization
         self.cache = {}
         # New cache items created at runtime

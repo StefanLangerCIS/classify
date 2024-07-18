@@ -2,3 +2,6 @@
 __pycache__
 search/.ipynb_checkpoints
 classification/data
+classification/.vector_cache
+tests/classification/classify/test_data/results*
+

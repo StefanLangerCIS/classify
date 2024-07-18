@@ -2,7 +2,7 @@ import os
 import unittest
 from typing import Tuple
 
-from classification.run_classifier import run_classifier
+from classification.classify.run_classifier import run_classifier, ClassificationResultData
 
 
 def get_test_files() -> Tuple[str, str]:
@@ -37,8 +37,8 @@ class TestRunClassifier(unittest.TestCase):
             max_train,
             True,
         )
-        self.assertTrue(isinstance(report, dict))
-        self.assertTrue("accuracy" in report)
+        self.assertTrue(isinstance(report, ClassificationResultData))
+        self.assertTrue(report.classification_report["accuracy"] > 0.5)
 
 
 if __name__ == "__main__":

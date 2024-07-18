@@ -32,7 +32,7 @@ class TextClassifier(ABC):
     @abc.abstractmethod
     def name(self) -> str:
         """
-        Return the classifier name
+        Return the classifier name.
         :return: Name of the classifier
         """
         return ""
@@ -86,18 +86,3 @@ def get_data_records_from_file(
         data_records = random.sample(data_records, mx)
 
     return data_records
-
-
-def get_data_points(
-    training_data: [str, List[Dict]], text_labels: List[str], class_label
-) -> List[Dict]:
-    """
-    Get the data points from a file or return what you already have.
-
-    :param training_data: Input data, a file name or the already prepared input data
-    :param text_labels:
-    :param class_label:
-    :return:
-    """
-
-    return data_points

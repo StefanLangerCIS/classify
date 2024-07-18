@@ -1,5 +1,5 @@
 """
-Evaluate any of the classifiers, print a confusion matrix and create further evalution metrics
+Evaluate any of the classifiers, print a confusion matrix and create further evaluation metrics
 """
 import argparse
 import os

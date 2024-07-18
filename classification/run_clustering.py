@@ -7,7 +7,7 @@ import os
 import time
 import random
 
-from classification.sklearn_clustering import SklearnClustering
+from classification.cluster.sklearn_clustering import SklearnClustering
 
 # Data directory. Follow structure in _default_data_dir or
 # set the CLS_SRCH_DATA_DIR environment directory

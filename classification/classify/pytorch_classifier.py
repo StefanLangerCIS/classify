@@ -12,14 +12,13 @@ from torch.utils.data import DataLoader
 from torchtext.data.utils import get_tokenizer
 from torchtext.vocab import build_vocab_from_iterator
 
-import classification.text_classifier
-from classification.text_classifier import (ClassifierResult, TextClassifier,
-                                            get_data_records_from_file)
+
+from classification.classify.text_classifier import (ClassifierResult, TextClassifier)
 
 
 class TorchTextClassificationModel(nn.Module):
     """
-    Holds the model.
+    Holds the model, i.e. the different neural networks
     """
 
     def __init__(self, vocab_size, embed_dim, num_class):
@@ -57,8 +56,8 @@ class TorchClassifier(TextClassifier):
     def __init__(
         self,
         model_folder_path: str = None,
-        embedding_size=64,
-        max_training_epochs=8,
+        embedding_size=1028,
+        max_training_epochs=20,
         verbose=False,
     ):
         """
@@ -78,7 +77,7 @@ class TorchClassifier(TextClassifier):
             os.makedirs(self.model_folder_path)
 
         self.verbose = verbose
-        self.classifier_name = "pytorch"
+        self.classifier_name = f"pytorch-dim{embedding_size}"
 
         self.embedding_size = embedding_size
         self.learning_rate = 5
@@ -106,7 +105,6 @@ class TorchClassifier(TextClassifier):
         Classify a record. The record can have multiple fields with text
 
         :param data: The data dictionary
-        :param text_label: The key(s) in the data which point to the text to classify
         :return: A list with one classifier result
         """
         text = data.get("text", "")
